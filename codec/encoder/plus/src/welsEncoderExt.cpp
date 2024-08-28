@@ -377,8 +377,8 @@ int CWelsH264SVCEncoder::EncodeFrame (const SSourcePicture* kpSrcPic, SFrameBSIn
     WelsLog (&m_pWelsTrace->m_sLogCtx, WELS_LOG_ERROR, "CWelsH264SVCEncoder::EncodeFrame(), cmInitParaError.");
     return cmInitParaError;
   }
-  if (kpSrcPic->iColorFormat != videoFormatI420) {
-    WelsLog (&m_pWelsTrace->m_sLogCtx, WELS_LOG_ERROR, "CWelsH264SVCEncoder::EncodeFrame(), wrong iColorFormat %d",
+  if (kpSrcPic->iColorFormat != videoFormatI420 && kpSrcPic->iColorFormat != videoFormatNV12) {
+    WelsLog (&m_pWelsTrace->m_sLogCtx, WELS_LOG_ERROR, "CWelsH264SVCEncoder::EncodeFrame(), adil wrong iColorFormat %d",
              kpSrcPic->iColorFormat);
     return cmInitParaError;
   }

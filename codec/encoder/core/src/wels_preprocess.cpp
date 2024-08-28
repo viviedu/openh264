@@ -1387,7 +1387,7 @@ void  WelsMoveMemory_c (uint8_t* pDstY, uint8_t* pDstU, uint8_t* pDstV,  int32_t
 void  CWelsPreProcess::WelsMoveMemoryWrapper (SWelsSvcCodingParam* pSvcParam, SPicture* pDstPic,
     const SSourcePicture* kpSrc,
     const int32_t kiTargetWidth, const int32_t kiTargetHeight) {
-  if (VIDEO_FORMAT_I420 != (kpSrc->iColorFormat & (~VIDEO_FORMAT_VFlip)))
+  if ((VIDEO_FORMAT_I420 != (kpSrc->iColorFormat & (~VIDEO_FORMAT_VFlip))) && (VIDEO_FORMAT_NV12 != (kpSrc->iColorFormat & (~VIDEO_FORMAT_VFlip))))
     return;
 
   int32_t  iSrcWidth       = kpSrc->iPicWidth;
@@ -1419,7 +1419,7 @@ void  CWelsPreProcess::WelsMoveMemoryWrapper (SWelsSvcCodingParam* pSvcParam, SP
   uint8_t* pDstU = pDstPic->pData[1];
   uint8_t* pDstV = pDstPic->pData[2];
   const int32_t kiDstStrideY = pDstPic->iLineSize[0];
-  const int32_t kiDstStrideUV = pDstPic->iLineSize[1];
+  int32_t kiDstStrideUV = pDstPic->iLineSize[1];
 
   if (pSrcY) {
     if (iSrcWidth <= 0 || iSrcHeight <= 0 || (iSrcWidth * iSrcHeight > (MAX_MBS_PER_FRAME << 8)))
@@ -1433,19 +1433,43 @@ void  CWelsPreProcess::WelsMoveMemoryWrapper (SWelsSvcCodingParam* pSvcParam, SP
     if (kiTargetWidth > kiDstStrideY)
       return;
   }
+  if(VIDEO_FORMAT_I420 == (kpSrc->iColorFormat & (~VIDEO_FORMAT_VFlip))){
+    if (pSrcY == NULL || pSrcU == NULL || pSrcV == NULL || pDstY == NULL || pDstU == NULL || pDstV == NULL
+        || (iSrcWidth & 1) || (iSrcHeight & 1)) {
+    } else {
+      //i420_to_i420_c
+      WelsMoveMemory_c (pDstY,  pDstU,  pDstV,  kiDstStrideY, kiDstStrideUV,
+                        pSrcY,  pSrcU,  pSrcV, kiSrcStrideY, kiSrcStrideUV, iSrcWidth, iSrcHeight);
 
-  if (pSrcY == NULL || pSrcU == NULL || pSrcV == NULL || pDstY == NULL || pDstU == NULL || pDstV == NULL
-      || (iSrcWidth & 1) || (iSrcHeight & 1)) {
-  } else {
-    //i420_to_i420_c
-    WelsMoveMemory_c (pDstY,  pDstU,  pDstV,  kiDstStrideY, kiDstStrideUV,
-                      pSrcY,  pSrcU,  pSrcV, kiSrcStrideY, kiSrcStrideUV, iSrcWidth, iSrcHeight);
-
-    //in VP Process
-    if (kiTargetWidth > iSrcWidth || kiTargetHeight > iSrcHeight) {
-      Padding (pDstY, pDstU, pDstV, kiDstStrideY, kiDstStrideUV, iSrcWidth, kiTargetWidth, iSrcHeight, kiTargetHeight);
+      //in VP Process
+      if (kiTargetWidth > iSrcWidth || kiTargetHeight > iSrcHeight) {
+        Padding (pDstY, pDstU, pDstV, kiDstStrideY, kiDstStrideUV, iSrcWidth, kiTargetWidth, iSrcHeight, kiTargetHeight);
+      }
     }
+  }else{
+    if (pSrcY == NULL || pSrcU == NULL || pDstY == NULL || pDstU == NULL || pDstV == NULL
+        || (iSrcWidth & 1) || (iSrcHeight & 1)) {
+    } else {
+      //NV12_to_i420_c
+      for (int i = iSrcHeight; i; i--) {
+          WelsMemcpy (pDstY, pSrcY, iSrcWidth);
+          pDstY += kiDstStrideY;
+          pSrcY += kiSrcStrideY;
+      }
+      for (int i = 0; i < iSrcHeight / 2; ++i) {
+        for (int j = 0; j < kiSrcStrideUV; ++j) {
+             pDstU[i * kiDstStrideUV + j] = pSrcU[i * kiSrcStrideUV + j * 2];
+             pDstV[i * kiDstStrideUV + j] = pSrcU[i * kiSrcStrideUV + j * 2 + 1];
+        }
+      }
+      kiDstStrideUV = kiDstStrideUV >> 1;
+      //in VP Process
+      if (kiTargetWidth > iSrcWidth || kiTargetHeight > iSrcHeight) {
+        Padding (pDstY, pDstU, pDstV, kiDstStrideY, kiDstStrideUV, iSrcWidth, kiTargetWidth, iSrcHeight, kiTargetHeight);
+      }
+    }    
   }
+
 
 }
 
