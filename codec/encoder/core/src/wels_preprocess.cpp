@@ -1419,7 +1419,7 @@ void  CWelsPreProcess::WelsMoveMemoryWrapper (SWelsSvcCodingParam* pSvcParam, SP
   uint8_t* pDstU = pDstPic->pData[1];
   uint8_t* pDstV = pDstPic->pData[2];
   const int32_t kiDstStrideY = pDstPic->iLineSize[0];
-  int32_t kiDstStrideUV = pDstPic->iLineSize[1];
+  const int32_t kiDstStrideUV = pDstPic->iLineSize[1];
 
   if (pSrcY) {
     if (iSrcWidth <= 0 || iSrcHeight <= 0 || (iSrcWidth * iSrcHeight > (MAX_MBS_PER_FRAME << 8)))
@@ -1452,17 +1452,16 @@ void  CWelsPreProcess::WelsMoveMemoryWrapper (SWelsSvcCodingParam* pSvcParam, SP
     } else {
       //NV12_to_i420_c
       for (int i = iSrcHeight; i; i--) {
-          WelsMemcpy (pDstY, pSrcY, iSrcWidth);
-          pDstY += kiDstStrideY;
-          pSrcY += kiSrcStrideY;
+        WelsMemcpy (pDstY, pSrcY, iSrcWidth);
+        pDstY += kiDstStrideY;
+        pSrcY += kiSrcStrideY;
       }
       for (int i = 0; i < iSrcHeight / 2; ++i) {
-        for (int j = 0; j < kiSrcStrideUV; ++j) {
-             pDstU[i * kiDstStrideUV + j] = pSrcU[i * kiSrcStrideUV + j * 2];
-             pDstV[i * kiDstStrideUV + j] = pSrcU[i * kiSrcStrideUV + j * 2 + 1];
+        for (int j = 0; j < kiDstStrideUV; ++j) {
+          pDstU[i * kiDstStrideUV + j] = pSrcU[i * kiSrcStrideUV + j * 2];
+          pDstV[i * kiDstStrideUV + j] = pSrcU[i * kiSrcStrideUV + j * 2 + 1];
         }
       }
-      kiDstStrideUV = kiDstStrideUV >> 1;
       //in VP Process
       if (kiTargetWidth > iSrcWidth || kiTargetHeight > iSrcHeight) {
         Padding (pDstY, pDstU, pDstV, kiDstStrideY, kiDstStrideUV, iSrcWidth, kiTargetWidth, iSrcHeight, kiTargetHeight);
