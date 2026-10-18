@@ -63,7 +63,8 @@ echo "--- :hammer: check tools"
 $tools = @('cl', 'lib', 'make', 'sh', 'rm', 'git')
 if ($Arch -eq 'arm64') { $tools += 'clang-cl' }
 foreach ($tool in $tools) {
-  $cmd = Get-Command $tool -ErrorAction SilentlyContinue
+  # PowerShell aliases rm to Remove-Item, which make cannot run.
+  $cmd = Get-Command $tool -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
   if (-not $cmd) { Stop-Build "$tool is not on PATH" }
   echo "$tool -> $($cmd.Source)"
 }
