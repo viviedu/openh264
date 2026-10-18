@@ -1,6 +1,6 @@
 # Requires Visual Studio 2022 Build Tools with the x86/x64 C++ tools.
 # arm64 also requires the ARM64 tools and "C++ Clang tools for Windows".
-# GNU make requires a POSIX sh such as Git's usr\bin\sh.
+# GNU make requires POSIX sh and rm, available in Git's usr\bin.
 
 param(
   [ValidateSet('x86', 'arm64', 'all')]
@@ -59,7 +59,8 @@ if ($Arch -eq 'arm64') { $env:Path = (Join-Path $vs 'VC\Tools\Llvm\x64\bin') + '
 if ($ExtraPath) { $env:Path = $ExtraPath + ';' + $env:Path }
 
 echo "--- :hammer: check tools"
-$tools = @('cl', 'lib', 'make', 'sh', 'git')
+# GNU make invokes rm directly, so rm must be on PATH.
+$tools = @('cl', 'lib', 'make', 'sh', 'rm', 'git')
 if ($Arch -eq 'arm64') { $tools += 'clang-cl' }
 foreach ($tool in $tools) {
   $cmd = Get-Command $tool -ErrorAction SilentlyContinue
