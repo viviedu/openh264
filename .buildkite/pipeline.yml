@@ -1,0 +1,42 @@
+env:
+  BUILDKITE_ARTIFACT_UPLOAD_DESTINATION: s3://vivi-buildkite-artifacts/${BUILDKITE_BUILD_ID}
+  BUILDKITE_S3_DEFAULT_REGION: ap-southeast-2
+
+# The v7-7-windows agents install the build tools at boot (vivi-devops bootstrap/windows/bootstrap.ps1).
+# The build needs Visual Studio Build Tools with the x86/x64 and ARM64 C++ tools and the Clang tools.
+# GNU make, git, sh and rm (from Git for Windows) must be on PATH.
+
+steps:
+  - label: ":windows: OpenH264 x86"
+    key: openh264_x86
+    agents:
+      queue: v7-7-windows
+    command: powershell -NoProfile -ExecutionPolicy Bypass -File .buildkite\scripts\build-openh264.ps1 -Arch x86
+    artifact_paths:
+      - out/x86/openh264.lib
+      - out/x86/openh264.lib.txt
+
+  - label: ":windows: OpenH264 arm64"
+    key: openh264_arm64
+    agents:
+      queue: v7-7-windows
+    command: powershell -NoProfile -ExecutionPolicy Bypass -File .buildkite\scripts\build-openh264.ps1 -Arch arm64
+    artifact_paths:
+      - out/arm64/openh264.lib
+      - out/arm64/openh264.lib.txt
+
+  # v7-7-windows is a spot queue, so the upload runs on v6.
+  - input: ":s3: :rocket: Deploy"
+    key: deploy_input
+    if: build.branch == pipeline.default_branch
+
+  - label: ":s3: :rocket: Deploy"
+    key: deploy
+    if: build.branch == pipeline.default_branch
+    depends_on:
+      - openh264_x86
+      - openh264_arm64
+      - deploy_input
+    agents:
+      queue: v6
+    command: .buildkite/scripts/deploy.sh
