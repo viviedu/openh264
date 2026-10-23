@@ -25,7 +25,7 @@ steps:
       - out/arm64/openh264.lib
       - out/arm64/openh264.lib.txt
 
-  # v7-7-windows is a spot queue, so the upload runs on v3.
+  # v7-7-windows is a spot queue, so the upload runs on v6.
   - input: ":s3: :rocket: Deploy"
     key: deploy_input
     if: build.branch == pipeline.default_branch
@@ -38,5 +38,5 @@ steps:
       - openh264_arm64
       - deploy_input
     agents:
-      queue: v3
+      queue: v6
     command: .buildkite/scripts/deploy.sh
