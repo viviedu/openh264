@@ -7,6 +7,9 @@ env:
 # GNU make, git, sh and rm (from Git for Windows) must be on PATH.
 
 steps:
+  - block: ":windows: Build"
+    key: build_block
+
   - label: ":windows: OpenH264 x86"
     key: openh264_x86
     agents:
