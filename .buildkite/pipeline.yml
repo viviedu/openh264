@@ -28,11 +28,9 @@ steps:
   # v7-7-windows is a spot queue, so the upload runs on v6.
   - input: ":s3: :rocket: Deploy"
     key: deploy_input
-    if: build.branch == pipeline.default_branch
 
   - label: ":s3: :rocket: Deploy"
     key: deploy
-    if: build.branch == pipeline.default_branch
     depends_on:
       - openh264_x86
       - openh264_arm64
