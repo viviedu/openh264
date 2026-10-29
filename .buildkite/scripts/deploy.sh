@@ -21,6 +21,6 @@ done
 
 echo "--- :s3: Upload"
 for arch in x86 arm64; do
-  aws s3 cp "out/${arch}/openh264.lib" "${dest}/openh264-${build}-${arch}.lib"
-  aws s3 cp "out/${arch}/openh264.lib.txt" "${dest}/openh264-${build}-${arch}.lib.txt"
+  aws s3 cp --acl public-read "out/${arch}/openh264.lib" "${dest}/openh264-${build}-${arch}.lib"
+  aws s3 cp --acl public-read "out/${arch}/openh264.lib.txt" "${dest}/openh264-${build}-${arch}.lib.txt"
 done
